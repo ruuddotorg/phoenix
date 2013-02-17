@@ -8,9 +8,7 @@ org 0x0000
   im 1
   ei
   call clear
-  xor a
-  ld (lastkey), a
-  inc a
+  ld a, 1
   ld (echo), a
   jr monitor
 
@@ -343,19 +341,19 @@ getchar_echo2:
 ; Wait for a key to be pressed and return it in A register.
 
 getchar:
-  ld a, (lastkey)
-  ld b, a
+  in a, (0xfe)
+  and 0x02
+  jr z, getchar
+  ld bc, 0x01fe
+  ld de, 0x0100
 getchar1:
   in a, (0xfe)
-  cp b
-  jr z, getchar1
-getchar2:
-  or a
-  jr nz, getchar3
-  in a, (0xfe)
-  jr getchar2
-getchar3:
-  ld (lastkey), a
+  out (c), d
+  out (c), e
+  rra
+  rl b
+  jr nc, getchar1
+  ld a, b
   ret
 
 font:
@@ -363,10 +361,9 @@ font:
 
 ; DATA
 
-org 0xe800 - 6
+org 0xe800 - 5
 
 stack:
-lastkey:    ds 1
 echo:       ds 1
 ticks:      ds 2
 column:     ds 1
